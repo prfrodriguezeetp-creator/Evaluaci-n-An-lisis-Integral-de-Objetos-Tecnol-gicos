@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Práctica Avanzada · Análisis Integral de Objetos Tecnológicos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #eef4f2, #d9e2dc);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.2rem;
+        }
+
+        /* Contenedor principal */
+        .quiz-container {
+            max-width: 820px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.02);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* Encabezado */
+        .quiz-header {
+            background: linear-gradient(135deg, #0a2e24, #135e44);
+            padding: 1.3rem 2rem;
+            color: white;
+        }
+        .quiz-header h1 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quiz-header h1 span {
+            font-size: 1.8rem;
+        }
+        .quiz-header p {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 6px;
+        }
+
+        /* Barra de progreso mejorada */
+        .progress-wrapper {
+            padding: 1rem 2rem 0.8rem;
+            background: #fff;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2c5a44;
+            margin-bottom: 0.6rem;
+        }
+        .progress-bar-bg {
+            background: #e6f0ea;
+            border-radius: 40px;
+            height: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            width: 0%;
+            height: 100%;
+            border-radius: 40px;
+            transition: width 0.4s ease;
+        }
+
+        /* Área de pregunta */
+        .question-area {
+            padding: 1.8rem 2rem 1.5rem;
+        }
+        .question-counter {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1f6e4a;
+            background: #e0f2e9;
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+            margin-bottom: 1rem;
+        }
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1b2f29;
+            line-height: 1.45;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Opciones */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            list-style: none;
+            margin-bottom: 1.2rem;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.2rem;
+            background: #fbfefc;
+            border: 2px solid #e2eee8;
+            border-radius: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .option-item:hover:not(.disabled-opt) {
+            background: #f0faf4;
+            border-color: #7fcdad;
+            transform: translateX(4px);
+        }
+        .option-letter {
+            width: 2rem;
+            height: 2rem;
+            background: #edf5f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #17533d;
+        }
+        .option-text {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #1f3d34;
+            line-height: 1.4;
+        }
+
+        /* Estados retroalimentación */
+        .option-item.correct-answer {
+            background: #e0f9ed;
+            border-color: #2b9e6e;
+            box-shadow: 0 0 0 2px rgba(43, 158, 110, 0.2);
+        }
+        .option-item.correct-answer .option-letter {
+            background: #2b9e6e;
+            color: white;
+        }
+        .option-item.wrong-answer {
+            background: #ffe9e9;
+            border-color: #e36b6b;
+            box-shadow: 0 0 0 2px rgba(227, 107, 107, 0.1);
+        }
+        .option-item.wrong-answer .option-letter {
+            background: #e36b6b;
+            color: white;
+        }
+        .option-item.disabled-opt {
+            cursor: default;
+            pointer-events: none;
+        }
+        .correct-highlight {
+            background: #e0f9ed;
+            border-color: #2b9e6e;
+        }
+
+        /* Caja de justificación */
+        .feedback-card {
+            background: #f6fbf9;
+            border-left: 5px solid #11998e;
+            border-radius: 1rem;
+            padding: 1rem 1.2rem;
+            margin-top: 0.8rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeSlide 0.25s ease;
+        }
+        .feedback-card.visible {
+            display: block;
+        }
+        .feedback-title {
+            font-weight: 800;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+            color: #1e6f5c;
+        }
+        .feedback-text {
+            font-size: 0.9rem;
+            color: #2b4b3e;
+            line-height: 1.5;
+        }
+        .feedback-card.correct-feedback {
+            background: #e8f6ef;
+            border-left-color: #11998e;
+        }
+        .feedback-card.incorrect-feedback {
+            background: #fff1f0;
+            border-left-color: #e36b6b;
+        }
+        .feedback-card.incorrect-feedback .feedback-title {
+            color: #c55353;
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Navegación */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        .btn {
+            border: none;
+            font-weight: 700;
+            padding: 0.7rem 1.4rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #e6edeb;
+            color: #254e41;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #135e44;
+            color: white;
+            box-shadow: 0 4px 10px rgba(19, 94, 68, 0.2);
+        }
+        .btn-primary:hover {
+            background: #0b4633;
+            transform: scale(1.01);
+        }
+        .btn-secondary {
+            background: #fff0e0;
+            color: #a45c2e;
+            border: 1px solid #f0d5bc;
+        }
+        .btn-secondary:hover {
+            background: #ffe4cd;
+        }
+        .btn-reset {
+            background: #ece8e0;
+            color: #6b4c2c;
+        }
+        .btn-reset:hover {
+            background: #e0d9ce;
+        }
+        .btn-finish {
+            background: #f5b042;
+            color: #2c2b26;
+        }
+        .btn-finish:hover {
+            background: #f0a02a;
+        }
+
+        /* Resultados finales */
+        .results-panel {
+            display: none;
+            background: #fff9f0;
+            border-radius: 1.5rem;
+            margin: 0 1.5rem 2rem 1.5rem;
+            padding: 1.6rem;
+            text-align: center;
+            border: 2px solid #ffe0b3;
+            animation: fadeInUp 0.4s;
+        }
+        .results-panel.show {
+            display: block;
+        }
+        .results-stats {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #11998e, #3bdf8c);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .results-detail {
+            margin-top: 1rem;
+            max-height: 280px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        .result-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #efe0cc;
+            display: flex;
+            gap: 0.7rem;
+        }
+        .restart-btn {
+            background: #135e44;
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 700;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            padding: 1rem;
+            color: #86a69a;
+            border-top: 1px solid #e3ece6;
+        }
+
+        @media (max-width: 650px) {
+            .quiz-container { border-radius: 1.5rem; }
+            .quiz-header { padding: 1rem 1.2rem; }
+            .question-area { padding: 1.2rem; }
+            .question-text { font-size: 1rem; }
+            .option-text { font-size: 0.85rem; }
+            .btn { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="quiz-container" id="quizContainer">
+    <div class="quiz-header">
+        <h1><span>🧠</span> Análisis Integral de Objetos Tecnológicos</h1>
+        <p>Dimensiones formal · técnica · funcional · estética · socioeconómica | Retroalimentación inmediata</p>
+    </div>
+
+    <div class="progress-wrapper">
+        <div class="progress-stats">
+            <span id="answeredCounter">0 / 20 respondidas</span>
+            <span id="percentText">0% completado</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="question-area" id="questionArea">
+        <div class="question-counter" id="qCounter">Pregunta 1 de 20</div>
+        <div class="question-text" id="questionText"></div>
+        <ul class="options-list" id="optionsList"></ul>
+        <div class="feedback-card" id="feedbackCard">
+            <div class="feedback-title" id="feedbackTitle">📘 Justificación técnica</div>
+            <div class="feedback-text" id="feedbackText"></div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" id="prevBtn">◀ Anterior</button>
+            <button class="btn btn-reset" id="resetBtn">🔄 Reiniciar práctica</button>
+            <button class="btn btn-finish" id="finishBtn">🏁 Finalizar</button>
+            <button class="btn btn-primary" id="nextBtn">Siguiente ▶</button>
+        </div>
+    </div>
+
+    <div class="results-panel" id="resultsPanel">
+        <div class="results-stats" id="resultsScore">🎯 0%</div>
+        <div id="resultsMessage">Completaste la práctica</div>
+        <div class="results-detail" id="resultsDetail"></div>
+        <button class="restart-btn" id="newPracticeBtn">🔄 Nueva práctica (orden aleatorio)</button>
+    </div>
+    <footer>✅ Modo práctica: selecciona una opción → retroalimentación inmediata + justificación técnica.</footer>
+</div>
+
+<script>
+    (function(){
+        // --------------------------------------------------------------
+        // BANCO DE PREGUNTAS (20 preguntas + justificaciones técnicas)
+        // Basado en el material "Análisis Integral de Objetos Tecnológicos"
+        // --------------------------------------------------------------
+        const ORIGINAL_QUESTIONS = [
+            { text: "Si un diseñador prioriza el uso de fibra de carbono sobre el aluminio 6061 T6 en un cuadro de competición, ¿cuál es la justificación técnica principal basada en la sinergia de dimensiones?", options: ["Mejorar la capacidad de absorción de impactos mediante la flexión natural.", "Incrementar la relación rigidez-peso para optimizar la eficiencia motriz.", "Reducir los costes de fabricación mediante procesos de moldeo a presión.", "Facilitar la integración estética de componentes internos de transmisión.", "Garantizar una mayor durabilidad ante la fatiga mecánica por uso intenso."], correct: 1, justification: "La fibra de carbono es preferida en alto rendimiento por su 'excepcional relación resistencia-peso' y capacidad para aumentar la rigidez sin peso añadido." },
+            { text: "Al analizar el sistema de transmisión bajo la dimensión técnica, ¿cómo se manifiesta físicamente el principio de la palanca mencionado en el material?", options: ["Mediante la resistencia que ofrecen los neumáticos al contacto con el suelo.", "Mediante la presión ejercida por el fluido incompresible en las pinzas de freno.", "Mediante la multiplicación de la fuerza aplicada desde los pedales a los platos.", "Mediante el desplazamiento de la cadena entre los diferentes piñones traseros.", "Mediante la absorción de energía cinética por parte de la horquilla delantera."], correct: 2, justification: "La propulsión se basa en el principio de la palanca: la fuerza aplicada en los pedales se multiplica a través de los platos y piñones." },
+            { text: "¿Qué diagnóstico formal explicaría una pérdida de eficiencia aerodinámica en una bicicleta diseñada para contrarreloj?", options: ["El uso de una geometría que obliga al ciclista a mantener una postura erguida.", "El empleo de soldaduras TIG visibles en las uniones de los tubos del cuadro.", "El incremento del diámetro de las ruedas de un estándar de 700c a uno mayor.", "El ajuste manual de la altura del sillín por debajo del centro de gravedad.", "El montaje de un sistema de frenado mecánico en lugar de uno hidráulico."], correct: 0, justification: "Postura erguida aumenta la resistencia al viento; la aerodinámica requiere posición baja y estirada. La geometría del cuadro afecta directamente la eficiencia." },
+            { text: "En el contexto de los procesos de fabricación, ¿cuál es la ventaja diagnóstica del hidroformado de tubos de aluminio frente a métodos tradicionales?", options: ["Permitir la creación de estructuras monocasco con capas de resina epoxi.", "Facilitar la unión precisa de metales mediante el uso de gas inerte tungsteno.", "Generar formas complejas que optimizan la resistencia y la aerodinámica.", "Reducir la temperatura necesaria para la fundición de aleaciones ligeras.", "Eliminar la necesidad de tratamientos químicos contra la corrosión externa."], correct: 2, justification: "El hidroformado permite 'formas complejas y optimizadas para la resistencia y la aerodinámica', maximizando el rendimiento estructural." },
+            { text: "Desde la dimensión socioeconómica, ¿cuál es el argumento técnico más sólido para promover la bicicleta frente a vehículos motorizados en entornos urbanos?", options: ["La posibilidad de alcanzar velocidades medias superiores a los 35 km/h constantes.", "La existencia de un mercado global que supera el billón de usuarios activos.", "La generación de cero emisiones directas de CO₂ durante su funcionamiento.", "La reducción de los costes de adquisición de modelos fabricados en cromoly.", "La flexibilidad estética que permite adaptar el diseño a tendencias modernas."], correct: 2, justification: "Cero emisiones directas de CO₂ es el beneficio ambiental clave, reduciendo la huella de carbono y mejorando la calidad del aire." },
+            { text: "¿Cómo influye la tendencia estética del 'clean look' en el rendimiento técnico de las bicicletas modernas de gama alta?", options: ["Aumenta la fricción mecánica al ocultar los cables dentro del cuadro principal.", "Mejora la aerodinámica al eliminar elementos que generan desorden visual.", "Reduce el peso total al prescindir de acabados de pintura brillantes o mate.", "Facilita el mantenimiento preventivo al simplificar el acceso a los sistemas.", "Incrementa la rigidez lateral al utilizar tubos de mayor grosor y densidad."], correct: 1, justification: "La integración de cables (clean look) no solo mejora la estética, sino que también reduce la resistencia aerodinámica y aporta fluidez." },
+            { text: "Un usuario reporta una falla recurrente en la precisión de los cambios. Según la sinergia del análisis integral, ¿qué factor técnico-formal podría ser la causa raíz?", options: ["La elección de un color de acabado satinado que oculta el desgaste del metal.", "La falta de armonía visual entre el tamaño de las ruedas y el cuadro de diamante.", "El uso de cables mecánicos en un sistema diseñado para señales electrónicas.", "La aplicación de una presión de inflado excesiva en neumáticos de 25mm.", "La implementación de una geometría urbana en un terreno de montaña irregular."], correct: 2, justification: "Los sistemas de cambios electrónicos requieren señales digitales; usar cables mecánicos rompe la compatibilidad técnica y afecta la precisión." },
+            { text: "En la dimensión funcional, ¿cuál es la diferencia crítica de diseño entre una bicicleta de carretera y una de montaña respecto a la usabilidad?", options: ["El tipo de material utilizado, priorizando siempre el acero en modelos de montaña.", "El sistema de frenado, empleando discos solo en modelos destinados al asfalto.", "La configuración de marchas, adaptada a la pendiente y el tipo de superficie.", "La longitud del cuadro, que debe ser mayor en ciudad para garantizar confort.", "La identidad de marca, que define el precio de mercado en ambos segmentos."], correct: 2, justification: "La versatilidad funcional exige relaciones de marchas adaptadas al terreno (montaña, carretera, gravel), optimizando la capacidad de ascenso y velocidad." },
+            { text: "¿Qué principio físico explica por qué los neumáticos de alta presión de 25mm mejoran la eficiencia energética en el análisis técnico?", options: ["La maximización de la fuerza de inercia en descensos pronunciados y sprints.", "La reducción de la deformación y la fricción del compuesto contra el suelo.", "El aumento de la superficie de contacto para mejorar la tracción en curvas.", "La compensación de la resistencia al viento generada por el perfil del aro.", "La transferencia directa de calor desde la banda de rodadura hacia la llanta."], correct: 1, justification: "Alta presión minimiza la deformación del neumático y reduce la fricción con el suelo, disminuyendo la resistencia a la rodadura." },
+            { text: "Al realizar una evaluación de mercado, ¿qué combinación de dimensiones permite a una empresa identificar una ventaja competitiva sostenible?", options: ["El análisis del impacto social unido a la historia cultural de la marca.", "El estudio de la ergonomía comparado con las tendencias estéticas retro.", "La comparativa de costes de producción frente a la durabilidad técnica.", "El examen de todas las dimensiones frente a la oferta de sus rivales.", "La revisión de políticas públicas en relación al uso de aleaciones ligeras."], correct: 3, justification: "Comparar las dimensiones formales, técnicas, funcionales, estéticas y socioeconómicas con la competencia revela ventajas sostenibles." },
+            { text: "¿Por qué el cuadro de diamante se considera el estándar en el análisis formal de la estructura de una bicicleta?", options: ["Porque permite la integración total de cables electrónicos en la estructura.", "Porque ofrece una configuración triangular que aporta resistencia y ligereza.", "Porque reduce los costes de soldadura TIG al utilizar tubos redondos simples.", "Porque facilita el ajuste de la altura del sillín para usuarios de toda talla.", "Porque garantiza una postura aerodinámica sin necesidad de componentes extra."], correct: 1, justification: "La configuración triangular clásica (cuadro diamante) proporciona una excelente relación resistencia-peso y rigidez estructural." },
+            { text: "En un diagnóstico de seguridad, ¿cuál es la principal ventaja técnica de los frenos de disco hidráulicos sobre los de llanta?", options: ["La reducción significativa del peso total del sistema de frenado en carrera.", "La simplicidad del mantenimiento preventivo realizado por el usuario final.", "La potencia y consistencia de frenado, especialmente en condiciones húmedas.", "La compatibilidad universal con cualquier tipo de ancho de neumático urbano.", "La eliminación del desgaste por fricción en las pastillas de freno internas."], correct: 2, justification: "Los frenos de disco hidráulicos ofrecen mayor potencia y consistencia en condiciones adversas (lluvia, barro) que los frenos de llanta." },
+            { text: "¿Qué aspecto de la dimensión estética contribuye directamente a la identidad de marca según el material?", options: ["El uso de una geometría de cuadro que priorice la absorción de vibraciones.", "La elección de materiales exóticos como el titanio para reducir el precio.", "La coherencia de diseño y la presencia de logos sutiles en los productos.", "El cumplimiento de normativas ambientales internacionales de cero emisiones.", "El desarrollo de nuevos mecanismos de transmisión electrónica por cable."], correct: 2, justification: "Logos sutiles y coherencia de diseño en toda la línea refuerzan la identidad de marca y la percepción de calidad." },
+            { text: "Bajo la dimensión socioeconómica, ¿qué factor determina principalmente el acceso a la bicicleta en países en desarrollo?", options: ["La disponibilidad de tecnología de fibra de carbono a precios de bajo coste.", "El bajo coste operativo y la disponibilidad global de modelos económicos.", "El aumento del 30% en el uso de ciclovías en las principales capitales europeas.", "La inclusión de la bicicleta como disciplina en los juegos olímpicos modernos.", "La implementación de sistemas de cambios de alta gama tipo Shimano Dura-Ace."], correct: 1, justification: "Su bajo coste operativo y disponibilidad global la convierten en una opción asequible para más de 1 billón de personas en regiones en desarrollo." },
+            { text: "La sinergia del análisis integral sugiere que un fallo en la función a menudo se rastrea hasta un problema en:", options: ["La comunicación de los valores estéticos de la marca hacia el consumidor.", "La elección de materiales o un diseño ergonómico deficiente en el origen.", "La falta de interés cultural de la sociedad por los medios de transporte.", "La fluctuación de los precios de mercado de las aleaciones de aluminio 6061.", "La ausencia de una postura aerodinámica en modelos de uso recreativo puro."], correct: 1, justification: "Una falla funcional puede rastrearse hasta una mala elección de materiales (formal/técnico) o un diseño ergonómico deficiente (estético/funcional)." },
+            { text: "¿Qué ajuste formal es crítico para garantizar la ergonomía y el manejo según la morfología del ciclista?", options: ["La selección del color de la pintura para mejorar la visibilidad en el tráfico.", "El cambio del material del cuadro de acero cromoly a fibra de carbono resinada.", "La longitud del cuadro y la longitud entre ejes para el ajuste del manejo.", "La instalación de un sistema de frenado hidráulico en lugar de uno mecánico.", "La reducción de la presión de inflado en los neumáticos de 27.5 pulgadas."], correct: 2, justification: "La longitud del cuadro (ej. talla 54 cm) y la distancia entre ejes son críticas para el ajuste del ciclista y la estabilidad." },
+            { text: "Desde la perspectiva de la usabilidad, ¿cómo afecta el acceso a los componentes al ciclo de vida del objeto?", options: ["Mejora la estética visual al ocultar las piezas de desgaste bajo el cuadro.", "Facilita el mantenimiento y la disponibilidad de repuestos para el usuario.", "Reduce la necesidad de realizar ajustes en la altura del sillín y manillar.", "Incrementa el precio de mercado debido a la complejidad de los sistemas.", "Disminuye la resistencia a la rodadura en superficies de asfalto y tierra."], correct: 1, justification: "El acceso fácil a componentes permite un mantenimiento sencillo y prolonga la vida útil del producto, mejorando la usabilidad." },
+            { text: "En el análisis técnico de la propulsión, ¿qué papel juega la inercia según las leyes del movimiento mencionadas?", options: ["Permite multiplicar la fuerza aplicada por el ciclista en cada pedalada única.", "Ayuda a mantener el movimiento de la bicicleta una vez se ha iniciado el avance.", "Facilita la detención inmediata del vehículo mediante el uso de frenos de disco.", "Reduce el rozamiento de los neumáticos contra el suelo en terrenos rugosos.", "Transfiere la energía desde los platos delanteros hacia los piñones traseros."], correct: 1, justification: "La inercia es la propiedad física que mantiene el movimiento; una vez en marcha, la bicicleta tiende a seguir avanzando." },
+            { text: "¿Cuál es el impacto ambiental indirecto de reducir la huella de carbono a través del uso de la bicicleta?", options: ["El encarecimiento de los materiales de fabricación como el acero cromoly.", "La mejora de la calidad del aire urbano y la salud física de la población.", "El aumento de la congestión vial en ciudades con alta densidad de tráfico.", "La necesidad de importar componentes electrónicos para sistemas de cambios.", "La reducción del interés social por la práctica de deportes olímpicos de élite."], correct: 1, justification: "Al reducir emisiones, se mejora la calidad del aire urbano, y el ejercicio físico asociado aporta beneficios a la salud pública." },
+            { text: "El análisis integral como motor de innovación permite a los diseñadores:", options: ["Limitar la creación de objetos tecnológicos a modelos ya probados con éxito.", "Enfocarse exclusivamente en la reducción de costes de materiales y producción.", "Identificar áreas de mejora o idear productos para necesidades emergentes.", "Priorizar la estética visual sobre la funcionalidad técnica en objetos de lujo.", "Estandarizar todos los modelos de transporte bajo una única geometría formal."], correct: 2, justification: "El análisis integral permite descubrir áreas de mejora y generar soluciones innovadoras para necesidades emergentes." }
+        ];
+
+        // ---------- variables globales ----------
+        let currentQuestions = [];    // array de objetos con opciones ya mezcladas
+        let userAnswers = [];         // índice { selectedIdx, isCorrect } por pregunta original (índice en currentQuestions)
+        let currentIndex = 0;
+        let totalQuestions = ORIGINAL_QUESTIONS.length;
+
+        // elementos DOM
+        const qCounterEl = document.getElementById('qCounter');
+        const questionTextEl = document.getElementById('questionText');
+        const optionsListEl = document.getElementById('optionsList');
+        const feedbackCard = document.getElementById('feedbackCard');
+        const feedbackTitle = document.getElementById('feedbackTitle');
+        const feedbackText = document.getElementById('feedbackText');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const finishBtn = document.getElementById('finishBtn');
+        const resultsPanel = document.getElementById('resultsPanel');
+        const progressFill = document.getElementById('progressFill');
+        const answeredCounterSpan = document.getElementById('answeredCounter');
+        const percentTextSpan = document.getElementById('percentText');
+        const newPracticeBtn = document.getElementById('newPracticeBtn');
+        const questionArea = document.getElementById('questionArea');
+
+        // Helper: mezclar array (Fisher-Yates)
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Generar test aleatorio: mezclar preguntas + mezclar opciones de cada una
+        function generateRandomTest() {
+            const shuffledQuestions = shuffleArray([...ORIGINAL_QUESTIONS]);
+            return shuffledQuestions.map(q => {
+                const originalOptions = [...q.options];
+                const correctAnswerText = originalOptions[q.correct];
+                const shuffledOptions = shuffleArray([...originalOptions]);
+                const newCorrectIndex = shuffledOptions.indexOf(correctAnswerText);
+                return {
+                    text: q.text,
+                    options: shuffledOptions,
+                    correctIndex: newCorrectIndex,
+                    justification: q.justification
+                };
+            });
+        }
+
+        // Reiniciar estado completo (nueva práctica)
+        function resetAndNewPractice() {
+            currentQuestions = generateRandomTest();
+            userAnswers = new Array(totalQuestions).fill(null); // cada elemento: { selectedIdx, isCorrect } o null
+            currentIndex = 0;
+            resultsPanel.classList.remove('show');
+            questionArea.style.display = 'block';
+            renderCurrentQuestion();
+            updateProgressAndStats();
+        }
+
+        // Actualizar barra de progreso y contadores
+        function updateProgressAndStats() {
+            const answeredCount = userAnswers.filter(a => a !== null).length;
+            const percent = Math.round((answeredCount / totalQuestions) * 100);
+            answeredCounterSpan.innerText = `${answeredCount} / ${totalQuestions} respondidas`;
+            percentTextSpan.innerText = `${percent}% completado`;
+            progressFill.style.width = `${percent}%`;
+        }
+
+        // Renderizar pregunta actual con estilos de retroalimentación si ya fue respondida
+        function renderCurrentQuestion() {
+            const q = currentQuestions[currentIndex];
+            const answerData = userAnswers[currentIndex];
+            const isAnswered = (answerData !== null);
+
+            qCounterEl.innerText = `Pregunta ${currentIndex+1} de ${totalQuestions}`;
+            questionTextEl.innerText = q.text;
+
+            optionsListEl.innerHTML = '';
+            const letters = ['A', 'B', 'C', 'D', 'E'];
+            q.options.forEach((opt, idx) => {
+                const li = document.createElement('li');
+                li.className = 'option-item';
+                if (isAnswered) li.classList.add('disabled-opt');
+                // resaltar si fue seleccionada (correcta o incorrecta)
+                if (isAnswered && answerData.selectedIdx === idx) {
+                    li.classList.add(answerData.isCorrect ? 'correct-answer' : 'wrong-answer');
+                }
+                // Si es la respuesta correcta y el usuario falló, mostramos también un borde verde? (opcional, pero para aprendizaje)
+                if (isAnswered && !answerData.isCorrect && idx === q.correctIndex) {
+                    li.style.border = "2px solid #2b9e6e";
+                    li.style.background = "#e8f6ef";
+                }
+                li.innerHTML = `
+                    <span class="option-letter">${letters[idx]}</span>
+                    <span class="option-text">${opt}</span>
+                `;
+                if (!isAnswered) {
+                    li.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (userAnswers[currentIndex] !== null) return;
+                        const selectedIdx = idx;
+                        const isCorrect = (selectedIdx === q.correctIndex);
+                        userAnswers[currentIndex] = { selectedIdx, isCorrect };
+                        // Mostrar feedback inmediato
+                        showFeedback(q, isCorrect);
+                        updateProgressAndStats();
+                        renderCurrentQuestion();  // refrescar estilos y deshabilitar opciones
+                    });
+                }
+                optionsListEl.appendChild(li);
+            });
+
+            // Manejar feedback si ya está respondida
+            if (isAnswered) {
+                showFeedback(q, answerData.isCorrect);
+            } else {
+                feedbackCard.classList.remove('visible', 'correct-feedback', 'incorrect-feedback');
+            }
+
+            // Botones navegación
+            prevBtn.disabled = (currentIndex === 0);
+            if (currentIndex === totalQuestions - 1) {
+                nextBtn.textContent = '✅ Finalizar';
+            } else {
+                nextBtn.textContent = 'Siguiente ▶';
+            }
+        }
+
+        function showFeedback(questionObj, isCorrect) {
+            feedbackCard.classList.add('visible');
+            if (isCorrect) {
+                feedbackCard.classList.add('correct-feedback');
+                feedbackCard.classList.remove('incorrect-feedback');
+                feedbackTitle.innerHTML = '✅ CORRECTO · Justificación técnica';
+            } else {
+                feedbackCard.classList.add('incorrect-feedback');
+                feedbackCard.classList.remove('correct-feedback');
+                feedbackTitle.innerHTML = '❌ INCORRECTO · Justificación técnica';
+            }
+            feedbackText.innerHTML = questionObj.justification;
+        }
+
+        function goToNext() {
+            if (currentIndex < totalQuestions - 1) {
+                currentIndex++;
+                renderCurrentQuestion();
+            } else {
+                // Finalizar y mostrar resultados
+                showFinalResults();
+            }
+        }
+
+        function goToPrev() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderCurrentQuestion();
+            }
+        }
+
+        function showFinalResults() {
+            const answeredAll = userAnswers.filter(a => a !== null).length;
+            if (answeredAll < totalQuestions) {
+                if (!confirm(`Aún faltan ${totalQuestions - answeredAll} pregunta(s) sin responder. ¿Deseas finalizar de todas formas? Las no respondidas se contarán como incorrectas.`)) {
+                    return;
+                }
+            }
+            let correctCount = 0;
+            for (let i = 0; i < totalQuestions; i++) {
+                const ans = userAnswers[i];
+                if (ans && ans.isCorrect) correctCount++;
+            }
+            const percentage = Math.round((correctCount / totalQuestions) * 100);
+            const resultStats = document.getElementById('resultsScore');
+            const resultMsgDiv = document.getElementById('resultsMessage');
+            const detailDiv = document.getElementById('resultsDetail');
+            resultStats.innerHTML = `🎯 ${correctCount} / ${totalQuestions} (${percentage}%)`;
+            let emoji = percentage >= 80 ? "🏆 Excelente" : (percentage >= 60 ? "👍 Muy bien" : "📘 Continúa practicando");
+            resultMsgDiv.innerHTML = `${emoji} · Aciertos: ${correctCount} de ${totalQuestions}.`;
+
+            let detailHtml = '';
+            for (let i = 0; i < totalQuestions; i++) {
+                const q = currentQuestions[i];
+                const ans = userAnswers[i];
+                const isCorrect = ans ? ans.isCorrect : false;
+                const userChoice = ans ? q.options[ans.selectedIdx] : "Sin responder";
+                const correctAnswer = q.options[q.correctIndex];
+                const statusIcon = isCorrect ? '✅' : '❌';
+                detailHtml += `
+                    <div class="result-item">
+                        <span style="min-width: 28px;">${statusIcon}</span>
+                        <div><strong>Pregunta ${i+1}</strong><br>Tu respuesta: ${userChoice}<br>Correcta: ${correctAnswer}<br><span style="font-size:0.75rem;">📖 ${q.justification.substring(0, 100)}...</span></div>
+                    </div>
+                `;
+            }
+            detailDiv.innerHTML = detailHtml;
+            resultsPanel.classList.add('show');
+            questionArea.style.display = 'none';
+        }
+
+        function resetQuizAndNew() {
+            resetAndNewPractice();
+            questionArea.style.display = 'block';
+            resultsPanel.classList.remove('show');
+        }
+
+        // Event listeners
+        prevBtn.addEventListener('click', goToPrev);
+        nextBtn.addEventListener('click', goToNext);
+        resetBtn.addEventListener('click', () => {
+            if (confirm("¿Reiniciar toda la práctica? Se perderá el progreso actual.")) resetAndNewPractice();
+        });
+        finishBtn.addEventListener('click', showFinalResults);
+        newPracticeBtn.addEventListener('click', resetQuizAndNew);
+
+        // MEDIDAS DE SEGURIDAD (inspección, clic derecho, atajos)
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+                (e.ctrlKey && (e.key === 'U' || e.key === 'S'))) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+        // Prevenir pull-to-refresh sutil
+        let touchStart = 0;
+        document.body.addEventListener('touchstart', e => { touchStart = e.touches[0].clientY; }, { passive: false });
+        document.body.addEventListener('touchmove', e => {
+            if (e.touches[0].clientY > touchStart && window.scrollY === 0) e.preventDefault();
+        }, { passive: false });
+
+        // Iniciar práctica
+        resetAndNewPractice();
+    })();
+</script>
+</body>
+</html>
